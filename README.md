@@ -1,103 +1,189 @@
-# 🚗 AI-Powered Vehicle Condition Assessment — Hiring Sprint
+# 🚀 Day 1 - Setup Instructions
 
-## 🧩 Overview
+## Project Structure
 
-Build a working prototype for **AI-powered vehicle condition assessment**. The system should allow users to capture/upload vehicle images at pick-up and return, automatically detect damages, and display a report.
-
-The solution can be a **web** or **mobile** app. Use of pretrained AI/ML models or APIs is allowed.
-
----
-
-## 🎯 Goal / Business Requirements
-
-**Business Goal:** Automate and simplify vehicle condition inspections for rental businesses (cars, scooters, boats, equipment). Enable customers and staff to:
-
-- Capture/upload vehicle images at pick-up and return
-- Detect and compare damages between pick-up and return
-- Estimate severity and cost of damages
-- Display results in a dashboard or report
-- Integrate with 3rd party systems via API
-
-**Example Workflow:**
-
-1. Customer picks up a car, takes photos via the app.
-2. On return, new photos are taken.
-3. The system compares images, highlights new damages, and estimates repair costs.
-4. A summary report is shown in the UI and available via API.
+```
+vehicle-damage-detection/
+├── backend/
+│   ├── main.py
+│   ├── requirements.txt
+│   └── README.md
+└── frontend/
+    ├── src/
+    │   └── App.jsx
+    ├── package.json
+    └── README.md
+```
 
 ---
 
-## 📦 Deliverables
+## 🔧 Backend Setup (FastAPI)
 
-- Deployed Service URL: Public link
-- UI: Web or mobile interface for image upload, damage detection, and report display
-- API: REST or GraphQL endpoint for 3rd party integration
-- README: Setup and usage instructions
-  
----
+### 1. Create Backend Directory
+```bash
+mkdir -p vehicle-damage-detection/backend
+cd vehicle-damage-detection/backend
+```
 
-## 🏆 Selection Criteria
+### 2. Create Virtual Environment
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-- Functionality & Stability: Does the project meet the core requirements? Are all main features working correctly without crashes or bugs?
-- Code Quality & Structure: Clean, modular, readable code. Proper use of version control, comments, and naming conventions.
-- Technical Implementation & Innovation: Appropriate choice of tech stack, API integrations, and efficient logic. AI integration.
-- Business Alignment: Does the solution address Aspire’s business case ?
-- UI/UX & Presentation: User interface quality, accessibility, and overall user experience.
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
 
----
+### 4. Run the Server
+```bash
+python main.py
+```
 
-## ☁️ Deployment Requirements
+Server will run on: **http://localhost:8000**
 
-- For webapp, you are free to deploy anywhere: [Vercel](https://vercel.com/), [Netlify](https://www.netlify.com/), [Render](https://render.com/), [Google Cloud Run](https://cloud.google.com/run), [Hugging Face Spaces](https://huggingface.co/spaces), etc.
-- For mobile apps, if cloud deployment is not possible, share the APK or Expo link
-
----
-
-## 💎 Bonus Points
-
-- Testing: Automated tests + instructions to run them
-- Documentation: API docs (Swagger/OpenAPI/GraphQL)
-- CI/CD: Pipeline for automated deployment
-- Dockerfile
+Test it: http://localhost:8000/docs (Swagger UI)
 
 ---
 
-## 🛠️ Resources
+## 🎨 Frontend Setup (React + Vite)
 
-### Deployment Free Resources
+### 1. Create React App with Vite
+```bash
+cd ..
+npm create vite@latest frontend -- --template react
+cd frontend
+```
 
-- [Vercel](https://vercel.com/) — Web frontend
-- [Netlify](https://www.netlify.com/) — Web frontend
-- [Render](https://render.com/) — Web or backend
-- [Google Cloud Run](https://cloud.google.com/run) — Backend containers
-- [Expo](https://expo.dev/) — React Native mobile apps
+### 2. Install Dependencies
+```bash
+npm install
+npm install lucide-react
+```
 
-### AI Models / LLMS
+### 3. Replace `src/App.jsx` with the provided code
 
-- You are free to use any free/open-source models, libraries, or APIs.
-- You may host your own solution or use a publicly available API, whatever works best for your prototype.
-- The goal is a working, reproducible prototype. Accuracy and cleverness will be evaluated, but you don’t need a production-level solution.
+### 4. Update `src/index.css` (optional styling)
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+### 5. Install Tailwind CSS
+```bash
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+```
+
+### 6. Configure `tailwind.config.js`
+```javascript
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+```
+
+### 7. Run Development Server
+```bash
+npm run dev
+```
+
+Frontend will run on: **http://localhost:5173**
 
 ---
 
-## 📝 Pro Tips / Implementation Notes
+## 🧪 Test the Application
 
-- Focus first on business requirements and core functionality. A working prototype is better than a fancy but incomplete solution.
-- You can store images however it makes sense (in memory, temp files, cloud storage, etc.)
-- Show results clearly in the UI: side-by-side images, highlights, and summary reports.
-- Prioritize clean, modular code and reproducibility for easy evaluation.
-- You may combine multiple tools to detect, score, and summarize damages.
+1. **Backend**: Open http://localhost:8000/docs
+   - Test `/health` endpoint
+   - Try `/api/detect` with an image
+
+2. **Frontend**: Open http://localhost:5173
+   - Upload a car image
+   - Click "Detect Damage"
+   - View mock results
 
 ---
 
-## 📬 Submission Guide
+## 🤖 Next Steps (Integrate Real AI Model)
 
-- Fork the repo to your own GitHub repository
-- Commit changes regularly and push all code to your repo
-- Deploy your solution to a cloud provider (make sure the URL is public)
-- Submit your solution [here](https://tally.so/r/VLEkQv)
-  
+### Option 1: Hugging Face Inference API (Easiest)
+```python
+import requests
+
+HF_API_URL = "https://api-inference.huggingface.co/models/keremberke/yolov8m-car-damage-detection"
+HF_TOKEN = "your_token_here"  # Get from huggingface.co/settings/tokens
+
+def detect_damage_hf(image_bytes):
+    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+    response = requests.post(HF_API_URL, headers=headers, data=image_bytes)
+    return response.json()
+```
+
+### Option 2: Load Model Locally
+```python
+from transformers import pipeline
+
+# Initialize once at startup
+damage_detector = pipeline(
+    "object-detection",
+    model="keremberke/yolov8m-car-damage-detection"
+)
+
+def detect_damage_local(image):
+    results = damage_detector(image)
+    return results
+```
+
+### Popular Models to Try:
+1. `keremberke/yolov8m-car-damage-detection` ⭐ Recommended
+2. `keremberke/yolov5m-car-damage-detection`
+3. `nickmuchi/yolos-small-finetuned-car-damage-detection`
+
 ---
 
+## 📝 Day 1 Checklist
 
-> 🏁 **Good luck!** Focus on a **working prototype**, clear UI, and AI-powered inspection summary 🚀.
+- [x] FastAPI backend with `/detect` endpoint
+- [x] React frontend with image upload
+- [x] Drag & drop functionality
+- [x] Mock damage detection working
+- [x] Results display with severity colors
+- [ ] Integrate real HF model
+- [ ] Test with actual car damage images
+
+---
+
+## 🐛 Common Issues
+
+**CORS Error?**
+- Backend is already configured with CORS middleware
+- Make sure backend is running on port 8000
+
+**Module not found?**
+- Activate virtual environment
+- Run `pip install -r requirements.txt`
+
+**Frontend not connecting?**
+- Check `API_URL` in App.jsx matches backend URL
+- Ensure backend is running
+
+---
+
+## 🎯 Tomorrow (Day 2)
+
+1. Implement comparison feature (pickup vs return)
+2. Add bounding box visualization
+3. Create report/export functionality
+4. Deploy to Vercel + Render
+5. Polish UI/UX
+
+Good luck! 🚀
