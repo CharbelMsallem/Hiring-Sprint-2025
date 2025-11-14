@@ -1,1 +1,12 @@
-# Here we add what is required for our project to install.
+# --- For the Web Server ---
+fastapi==0.111.1
+uvicorn[standard]==0.30.3
+python-multipart==0.0.9
+
+# --- For Image Processing ---
+Pillow==10.4.0
+
+# --- For the AI Model ---
+torch==2.8.0
+ultralytics==8.3.228
+huggingface-hub==0.19.4
