@@ -10,7 +10,6 @@ class DamageDetector:
     """
     
     # Damage classes and their properties
-    # These names MUST match the order from your data.yaml fix
     DAMAGE_CLASSES = {
         0: {"name": "crack", "severity": "medium", "base_cost": 150},
         1: {"name": "dent", "severity": "medium", "base_cost": 200},
@@ -20,7 +19,7 @@ class DamageDetector:
         5: {"name": "tire_flat", "severity": "medium", "base_cost": 120}
     }
     
-    def __init__(self, model_repo: str = "CharbelMsalem/yolov8m-finetuned-datamatics-damage"):
+    def __init__(self, model_repo: str = "CharbelMsalem/yolov8n-finetuned-datamatics-damage"):
         """
         Initialize the damage detector
         """
@@ -40,7 +39,6 @@ class DamageDetector:
             )
             print(f"Model downloaded to: {model_path}")
             self.model = YOLO(model_path)
-            # The line that was here is gone
             print("Model loaded successfully!")
             
         except Exception as e:
@@ -54,9 +52,13 @@ class DamageDetector:
     def detect(self, image: Image.Image, conf_threshold: float = 0.25) -> List[Dict]:
         """
         Detect damages in an image
+        Returns detections with both normalized and absolute coordinates
         """
         if not self.is_loaded():
             raise RuntimeError("Model not loaded")
+        
+        # Get image dimensions
+        img_width, img_height = image.size
         
         results = self.model.predict(image, conf=conf_threshold, verbose=False)
         
@@ -65,7 +67,10 @@ class DamageDetector:
             for box in result.boxes:
                 class_id = int(box.cls[0])
                 confidence = float(box.conf[0])
-                bbox_normalized = box.xyxyn.tolist()[0] # [x1_norm, y1_norm, x2_norm, y2_norm]
+                
+                # Get both normalized and absolute coordinates
+                bbox_normalized = box.xyxyn.tolist()[0]  # [x1_norm, y1_norm, x2_norm, y2_norm]
+                bbox_absolute = box.xyxy.tolist()[0]  # [x1, y1, x2, y2] in pixels
                 
                 damage_info = self.DAMAGE_CLASSES.get(class_id, {
                     "name": f"unknown_{class_id}",
@@ -73,19 +78,38 @@ class DamageDetector:
                     "base_cost": 0
                 })
                 
-                # Mocked cost/severity for the frontend
+                # Calculate cost
                 estimated_cost = damage_info["base_cost"] * (1 + confidence)
+                
+                # Calculate center point for location display
+                center_x = (bbox_absolute[0] + bbox_absolute[2]) / 2
+                center_y = (bbox_absolute[1] + bbox_absolute[3]) / 2
+                
+                # Determine rough location based on position
+                location = self._get_location(center_x, center_y, img_width, img_height)
 
                 detections.append({
                     "type": damage_info["name"],
                     "confidence": round(confidence, 3),
-                    "box": [round(x, 2) for x in bbox_normalized], # Use normalized coordinates
+                    "box": [round(x, 2) for x in bbox_normalized],  # Normalized for comparison
+                    "box_pixels": [round(x, 2) for x in bbox_absolute],  # Absolute for drawing
                     "severity": damage_info["severity"],
                     "cost": round(estimated_cost, 2),
-                    "location": "Mocked Location" # Frontend expects this
+                    "location": location
                 })
         
         return detections
+    
+    @staticmethod
+    def _get_location(x: float, y: float, width: float, height: float) -> str:
+        """
+        Determine approximate location based on coordinates
+        """
+        # Divide image into regions
+        h_region = "Left" if x < width / 3 else "Center" if x < 2 * width / 3 else "Right"
+        v_region = "Upper" if y < height / 3 else "Middle" if y < 2 * height / 3 else "Lower"
+        
+        return f"{v_region} {h_region}"
     
     def compare_detections(
         self, 

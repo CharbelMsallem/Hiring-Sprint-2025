@@ -58,6 +58,19 @@ export default function VehicleDamageAssessment() {
     }
   };
 
+  const handleBackToDashboard = () => {
+    setActiveTab('dashboard');
+  };
+
+  const handleNewAnalysis = () => {
+    setPickupImage(null);
+    setReturnImage(null);
+    setPickupPreview(null);
+    setReturnPreview(null);
+    setResults(null);
+    setActiveTab('dashboard');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       <Header />
@@ -77,6 +90,15 @@ export default function VehicleDamageAssessment() {
           >
             Report
           </Button>
+          {results && (
+            <Button
+              onClick={handleNewAnalysis}
+              variant="tab"
+              className="ml-auto"
+            >
+              New Analysis
+            </Button>
+          )}
         </div>
 
         {activeTab === 'dashboard' && (
@@ -97,6 +119,7 @@ export default function VehicleDamageAssessment() {
             results={results}
             pickupPreview={pickupPreview}
             returnPreview={returnPreview}
+            onBackToDashboard={handleBackToDashboard}
           />
         )}
       </main>

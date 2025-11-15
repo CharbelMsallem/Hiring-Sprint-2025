@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import io
 import uvicorn
-from io import BytesIO  # <-- ADD THIS LINE
+from io import BytesIO  
 from model_integration import DamageDetector
 
 app = FastAPI(
