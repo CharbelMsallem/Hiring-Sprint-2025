@@ -20,9 +20,20 @@ The application is built with a modern decoupled "frontend/backend" architecture
 
 * **Frontend (React + Vite):** A responsive user interface built in React and bundled with Vite. It handles image uploads and displays the final damage report.
 
-* **Backend (Python + FastAPI):** A powerful API built with FastAPI that receives the images. It uses a **YOLOv8** model (loaded from Hugging Face) to run object detection, identify damages, and compare the two sets of results.
+* **Backend (Python + FastAPI):** A powerful API built with FastAPI that receives the images. It uses a custom **YOLOv8n** model, which I fine-tuned, to run object detection. This model is served from Hugging Face and is the core of the damage analysis.
 
 * **Containerization (Docker):** The backend and frontend are both containerized with Docker, allowing for consistent, isolated environments for development and production.
+
+# 🧠 AI Model Fine-Tuning
+
+The core intelligence of this application comes from a **YOLOv8n** (nano) model that I personally fine-tuned for this specific task.
+
+1.  **Base Model:** I started with the pre-trained `yolov8n.pt` model, known for its speed and efficiency.
+2.  **Dataset:** I sourced a specialized **Car Damage Dataset** from Roboflow, which contained labeled images for six types of damage: `crack`, `dent`, `glass_shatter`, `lamp_broken`, `scratch`, and `tire_flat`.
+3.  **Training:** Using a Google Colab notebook, I trained the model on this dataset for 30 epochs, adjusting class names and configurations to achieve high accuracy (mAP50-95 of over 61%).
+4.  **Deployment:** The final, trained model weights (`best.pt`) were then uploaded to a public Hugging Face repository. The backend API (`model_integration.py`) downloads and runs this specific model.
+
+The complete training and validation process is fully documented in the Jupyter Notebook: `backend/notebooks/AutoInspect.ipynb`.
 
 # 🚀 How to Run Locally
 
@@ -107,7 +118,7 @@ The live application is deployed using a "best-of-both-worlds" approach, playing
 
    * **Service:** The FastAPI backend is deployed on **Render** as a **Docker Web Service**.
 
-   * **Why:** Render is ideal for long-running stateful services. It can run our Docker container, keep the large AI model (PyTorch, YOLOv8) loaded in memory, and handle persistent API requests.
+   * **Why:** Render is ideal for long-running stateful services. It can run our Docker container, keep the large, custom-trained AI model loaded in memory, and handle persistent API requests.
 
    * **URL:** `https://hiring-sprint-2025-autoinspect.onrender.com/`
 
@@ -130,7 +141,7 @@ A file named `frontend/vercel.json` tells the Vercel deployment how to handle AP
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://hiring-sprint-2025-autoinspect.onrender.com/api/:path*"
+      "destination": "[https://hiring-sprint-2025-autoinspect.onrender.com/api/:path](https://hiring-sprint-2025-autoinspect.onrender.com/api/:path)*"
     }
   ]
 }
