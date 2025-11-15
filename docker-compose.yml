@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # -----------------
+  # Backend Service
+  # -----------------
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: autoinspect-backend-local
+    ports:
+      - "8000:8000" # Expose backend port 8000 to host port 8000
+    volumes:
+      # Mount the model cache as a volume
+      # This preserves the downloaded model even if you stop/remove the container
+      - autoinspect-model-cache:/home/appuser/.cache/huggingface
+    
+  # -----------------
+  # Frontend Service
+  # -----------------
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: autoinspect-frontend-local
+    ports:
+      - "8080:80" # Expose frontend Nginx port 80 to host port 8080
+    environment:
+      # This is the magic!
+      # Nginx will proxy to the 'backend' service at its port 8000
+      - BACKEND_API_URL=http://backend:8000
+    depends_on:
+      - backend # Tell Docker to start the backend before the frontend
+
+# -----------------
+# Named Volume
+# -----------------
+volumes:
+  autoinspect-model-cache: # Defines the volume for the model cache

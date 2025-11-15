@@ -1,0 +1,28 @@
+server {
+    listen 80;
+    server_name localhost;
+
+    # Root directory for static files
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Handle SPA (Single Page Application) routing
+    # This ensures all routes load index.html for React to handle
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy API requests to the backend
+    # This replaces the Vite dev server proxy
+    location /api/ {
+        # This environment variable must be set when you run the container
+        # Example: http://backend-service:8000
+        proxy_pass ${BACKEND_API_URL};
+        
+        # Standard proxy headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
