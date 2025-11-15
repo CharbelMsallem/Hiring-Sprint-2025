@@ -13,9 +13,36 @@ env:
   IMAGE_NAMESPACE: ${{ github.repository_owner }}
 
 jobs:
+  # This new job checks which files have changed
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    # Set outputs for other jobs to use
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Path Filter action
+        # This popular action checks which paths have changed
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/ci-pipeline.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/ci-pipeline.yml'
+
   lint-and-test:
     name: Lint & Test
     runs-on: ubuntu-latest
+    # This job can run at the same time as the 'changes' job
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -57,11 +84,10 @@ jobs:
   build-backend:
     name: Build Backend Docker
     runs-on: ubuntu-latest
-    needs: lint-and-test
-    # Only run if backend files or this workflow file changed
-    paths:
-      - 'backend/**'
-      - '.github/workflows/ci-pipeline.yml'
+    # This job depends on linting AND change detection
+    needs: [lint-and-test, changes]
+    # This 'if' condition runs the job ONLY if the 'backend' output from 'changes' is 'true'
+    if: needs.changes.outputs.backend == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -90,11 +116,10 @@ jobs:
   build-frontend:
     name: Build Frontend Docker
     runs-on: ubuntu-latest
-    needs: lint-and-test
-    # Only run if frontend files or this workflow file changed
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/ci-pipeline.yml'
+    # This job also depends on linting AND change detection
+    needs: [lint-and-test, changes]
+    # This 'if' condition runs the job ONLY if the 'frontend' output from 'changes' is 'true'
+    if: needs.changes.outputs.frontend == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
